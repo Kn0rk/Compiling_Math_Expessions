@@ -125,7 +125,7 @@ func ParseNum(t *Tokenizer) error {
 			offset:  t.charOffset,
 			message: fmt.Sprintf("expected a number but got '%s'", token.text)}
 	}
-	fmt.Printf("push %d \n", token.value)
+	// fmt.Printf("push %d \n", token.value)
 	global_bin = append(global_bin, translateTerm(token.value)...)
 	return nil
 }
@@ -143,12 +143,12 @@ func ParseTerm(t *Tokenizer) error {
 
 	for {
 		token := t.currentToken()
-		operator := byte(' ')
+		operator := -1
 		switch token.tokenType {
 		case MultiplicationToken:
-			operator = '*'
+			operator = MultiplicationToken
 		case DivisionToken:
-			operator = '/'
+			operator = DivisionToken
 		default:
 			if parse_err == nil {
 				return nil
@@ -173,8 +173,8 @@ func ParseTerm(t *Tokenizer) error {
 		if err != nil {
 			return err
 		}
-		fmt.Printf("%c", operator)
-		// global_bin = append(global_bin, translateOperation()...)
+		// fmt.Printf("* or /")
+		global_bin = append(global_bin, translateOperation(operator)...)
 		err = t.advance()
 		if err != nil {
 			return err // eof
@@ -218,7 +218,7 @@ func ParseExpr(t *Tokenizer) error {
 			}
 		}
 		err = ParseTerm(t)
-		fmt.Printf("+/-\n")
+		// fmt.Printf("+/-\n")
 		global_bin = append(global_bin, translateOperation(operator)...)
 		if err != nil {
 			return err // eof or err
@@ -235,10 +235,11 @@ func ParseStatement(t *Tokenizer) error {
 		// call print
 
 		global_bin = append(global_bin, call_print()...)
+		global_bin = append(global_bin, newLine()...)
 		if err != nil {
 			return err
 		}
-		fmt.Println("")
+		// fmt.Println("")
 		if err == io.EOF {
 			return nil
 		}
@@ -255,12 +256,11 @@ func panic_on_err(e error) {
 	}
 }
 
-func main() {
+func parseFile(filePath string) {
 	global_bin = make([]byte, 0)
-	var file_name = "../../inputs/input1.txt"
-	data, err := os.ReadFile(file_name)
+	data, err := os.ReadFile(filePath)
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "No file named %v\n", file_name)
+		fmt.Fprintf(os.Stderr, "No file named %v\n", filePath)
 		panic(1)
 	}
 	tok := Tokenizer{fileContent: data}
@@ -287,6 +287,10 @@ func main() {
 	// Write machine code
 	file.Write(bytes)
 
+}
+
+func main() {
+	parseFile("../../inputs/input1.txt")
 	fmt.Println("ELF file 'minimal_elf' created.")
 
 }

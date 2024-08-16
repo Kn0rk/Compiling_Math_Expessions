@@ -94,14 +94,18 @@ func call_print() []byte {
 	}
 }
 
-// func newLine() []byte {
-// 	4010a2:       b8 01 00 00 00          mov    $0x1,%eax
-// 	4010a7:       bf 01 00 00 00          mov    $0x1,%edi
-// 	4010ac:       48 be 15 20 40 00 00    movabs $0x402015,%rsi
-// 	4010b3:       00 00 00
-// 	4010b6:       ba 01 00 00 00          mov    $0x1,%edx
-// 	4010bb:       0f 05                   syscall
-// }
+// 40104f:       b8 01 00 00 00          mov    $0x1,%eax
+// 401054:       bf 01 00 00 00          mov    $0x1,%edi
+// 6a 0a                   push   $0xa
+//
+//	40105b:       48 89 e6                mov    %rsp,%rsi
+//	40105e:       ba 01 00 00 00          mov    $0x1,%edx
+//	401063:       0f 05                   syscall
+func newLine() []byte {
+	return []byte{
+		0xb8, 0x01, 0x00, 0x00, 0x00, 0xbf, 0x01, 0x00, 0x00, 0x00, 0x6a, 0x0a, 0x48, 0x89, 0xe6, 0xba, 0x01, 0x00, 0x00, 0x00, 0x0f, 0x05,
+	}
+}
 
 func cleanExit() []byte {
 	return []byte{
