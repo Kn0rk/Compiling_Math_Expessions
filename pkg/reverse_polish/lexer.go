@@ -37,6 +37,22 @@ type Token struct {
 	value  int
 }
 
+func (t *Tokenizer) advanceToNextLine() error {
+	var newline = []byte("\n")
+	for t.fileOffset < len(t.fileContent) && !contains(newline, t.fileContent[t.fileOffset]) {
+		t.fileOffset += 1
+	}
+	t.fileOffset += 1
+	t.charOffset = 0
+	t.line += 1
+	if t.fileOffset >= len(t.fileContent) {
+		return io.EOF
+	}
+
+	return nil
+
+}
+
 func (t *Tokenizer) advance() error {
 	t.fileOffset += 1
 	t.charOffset += 1
