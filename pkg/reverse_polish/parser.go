@@ -137,7 +137,12 @@ func Compile(filePath string, outPath string) {
 	}
 	tok := lexer{fileContent: data}
 	syntaxErrors := parseStatement(&tok)
-	fmt.Print(syntaxErrors)
+	if len(syntaxErrors) > 0 {
+		for _, v := range syntaxErrors {
+			fmt.Println(v.Error())
+		}
+		return
+	}
 
 	file, err := os.Create(outPath)
 	if err != nil {
@@ -153,5 +158,5 @@ func Compile(filePath string, outPath string) {
 	)
 
 	file.Write(bytes)
-
+	fmt.Printf("Executable %v created.\n", outPath)
 }
