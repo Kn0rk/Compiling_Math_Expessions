@@ -14,7 +14,7 @@ func contains[T comparable](array []T, val T) bool {
 	return false
 }
 
-type Tokenizer struct {
+type lexer struct {
 	line        int
 	charOffset  int
 	fileContent []byte
@@ -31,13 +31,13 @@ const (
 	UnknownToken
 )
 
-type Token struct {
+type token struct {
 	name   int
 	lexeme string
 	value  int
 }
 
-func (t *Tokenizer) advanceToNextLine() error {
+func (t *lexer) advanceToNextLine() error {
 	var newline = []byte("\n")
 	for t.fileOffset < len(t.fileContent) && !contains(newline, t.fileContent[t.fileOffset]) {
 		t.fileOffset += 1
@@ -53,7 +53,7 @@ func (t *Tokenizer) advanceToNextLine() error {
 
 }
 
-func (t *Tokenizer) advance() error {
+func (t *lexer) advance() error {
 	t.fileOffset += 1
 	t.charOffset += 1
 	var whitespaces = []byte(" \t")
@@ -75,9 +75,9 @@ func (t *Tokenizer) advance() error {
 	return nil
 }
 
-func (t *Tokenizer) currentToken() Token {
+func (t *lexer) currentToken() token {
 
-	var resultToken = Token{}
+	var resultToken = token{}
 	resultToken.lexeme = string(t.fileContent[t.fileOffset])
 
 	if t.fileContent[t.fileOffset] == '+' {

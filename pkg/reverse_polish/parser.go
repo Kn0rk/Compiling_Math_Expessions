@@ -9,7 +9,7 @@ import (
 
 var global_bin []byte
 
-func parseNum(t *Tokenizer) error {
+func parseNum(t *lexer) error {
 	token := t.currentToken()
 
 	if token.name != NumToken {
@@ -19,11 +19,11 @@ func parseNum(t *Tokenizer) error {
 			message: fmt.Sprintf("expected a number but got '%s'", token.lexeme)}
 	}
 	// fmt.Printf("push %d \n", token.value)
-	global_bin = append(global_bin, translateTerm(token.value).assembly...)
+	global_bin = append(global_bin, translateTerm(token.value)...)
 	return nil
 }
 
-func parseTerm(t *Tokenizer) error {
+func parseTerm(t *lexer) error {
 	parse_err := parseNum(t)
 
 	if parse_err != nil {
@@ -43,15 +43,7 @@ func parseTerm(t *Tokenizer) error {
 		case DivisionToken:
 			operator = DivisionToken
 		default:
-			if parse_err == nil {
-				return nil
-			} else {
-				return &SyntaxError{
-					line:    t.line,
-					offset:  t.charOffset,
-					message: fmt.Sprintf("expected either a * or / sign but got %s", token.lexeme),
-				}
-			}
+			return nil
 		}
 
 		err = t.advance()
@@ -74,7 +66,7 @@ func parseTerm(t *Tokenizer) error {
 	}
 }
 
-func parseExpr(t *Tokenizer) error {
+func parseExpr(t *lexer) error {
 	parse_err := parseTerm(t)
 
 	if parse_err != nil {
@@ -90,17 +82,8 @@ func parseExpr(t *Tokenizer) error {
 		case MinusToken:
 			operator = MinusToken
 		default:
-			if parse_err == nil {
-				return nil
-			} else {
-				return &SyntaxError{
-					line:    t.line,
-					offset:  t.charOffset,
-					message: fmt.Sprintf("expected either a plus or minus sign but got %s", token.lexeme),
-				}
-			}
+			return nil
 		}
-
 		err := t.advance()
 		if err != nil {
 			return &SyntaxError{
@@ -119,7 +102,7 @@ func parseExpr(t *Tokenizer) error {
 
 }
 
-func parseStatement(t *Tokenizer) []SyntaxError {
+func parseStatement(t *lexer) []SyntaxError {
 
 	var syntaxErrors []SyntaxError = make([]SyntaxError, 0)
 
@@ -127,7 +110,6 @@ func parseStatement(t *Tokenizer) []SyntaxError {
 		var buff = global_bin
 		global_bin = make([]byte, 0)
 		err := parseExpr(t)
-		// call print
 
 		global_bin = append(global_bin, call_print()...)
 		global_bin = append(global_bin, newLine()...)
@@ -146,29 +128,18 @@ func parseStatement(t *Tokenizer) []SyntaxError {
 	return syntaxErrors
 }
 
-func panic_on_err(e error) {
-	if errors.Is(e, io.EOF) {
-		// ignore
-		return
-	}
-	if e != nil {
-		panic(e)
-	}
-}
-
-func ParseFile(filePath string) {
+func Compile(filePath string, outPath string) {
 	global_bin = make([]byte, 0)
 	data, err := os.ReadFile(filePath)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "No file named %v\n", filePath)
 		panic(1)
 	}
-	tok := Tokenizer{fileContent: data}
+	tok := lexer{fileContent: data}
 	syntaxErrors := parseStatement(&tok)
 	fmt.Print(syntaxErrors)
-	panic_on_err(err)
 
-	file, err := os.Create("go_elf")
+	file, err := os.Create(outPath)
 	if err != nil {
 		fmt.Println("Error creating file:", err)
 		return

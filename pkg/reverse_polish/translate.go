@@ -3,21 +3,17 @@ package reverse_polish
 import (
 	"bytes"
 	"encoding/binary"
-	"strconv"
 )
 
-func translateTerm(num int) ProgramNode {
+func translateTerm(num int) []byte {
 
-	var node = ProgramNode{}
 	// push term on stack
 	// we have to use the 64bit register for push/pop
 	buf := new(bytes.Buffer)
 	buf.WriteByte(0x68) // push
 	binary.Write(buf, binary.LittleEndian, int32(num))
 	byts := buf.Bytes()
-	node.assembly = byts
-	node.value = strconv.Itoa(num)
-	return node
+	return byts
 }
 
 func translateOperation(token int) []byte {
@@ -120,7 +116,6 @@ func cleanExit() []byte {
 		0x31, 0xdb,
 		// sys call
 		0xcd, 0x80}
-
 }
 
 func fixedElfHeader() []byte {
