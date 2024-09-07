@@ -87,6 +87,7 @@ type Expression struct {
 }
 
 type Declaration struct {
+	Pos        lexer.Position
 	Prefix     *string             `@("var")`
 	Identifier *string             `@Ident`
 	Assignment *AssignmentOperator `@("=")`
@@ -119,10 +120,7 @@ type Statement struct {
 	Expression  *Expression  `| @@`
 }
 
-// var parser = participle.MustBuild[KnorkLang]()
-
 func DMain() {
-	// var reader = strings.NewReader(`"hi"+7+2`)
 	ini, err := parser.ParseString("", `var far =  6.2 + 2;
 	id = id +9;
 	`)
@@ -132,7 +130,6 @@ func DMain() {
 		uerr, ok := err.(*participle.UnexpectedTokenError)
 		// fmt.Print(uerr)
 		if ok {
-			// uerr.Unexpected.Type
 			if uerr.Unexpected.Type == -2 {
 				fmt.Printf("Line %v:%v Used reserved keyword: %v\n",
 					uerr.Unexpected.Pos.Line,
@@ -143,7 +140,13 @@ func DMain() {
 			}
 			panic(0)
 		}
-
 		panic(0)
+	}
+
+	for _, statement := range ini.Statements {
+		err = statement.analyze()
+		if err != nil {
+			panic(err)
+		}
 	}
 }
