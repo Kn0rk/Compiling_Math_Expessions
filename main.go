@@ -1,7 +1,7 @@
 package main
 
 import (
-	"knork.org/compiler/pkg/declare_and_assign"
+	"knork.org/compiler/pkg/02_declare_and_assign"
 	// "knork.org/compiler/pkg/reverse_polish"
 )
 

@@ -2,6 +2,7 @@ package declareandassign
 
 import (
 	"fmt"
+	// "strconv"
 
 	"github.com/alecthomas/repr"
 
@@ -19,6 +20,7 @@ var lexRules = []lexer.SimpleRule{
 	{`String`, `"(?:\\.|[^"])*"`},
 	{`Float`, `\d+(?:\.\d+)`},
 	{`Int`, `\d+\d*`},
+	{`Char`, `'.'`},
 	{`Punct`, `[][=]`},
 	{"comment", `[#;][^\n]*`},
 	{"whitespace", `\s+`},
@@ -53,11 +55,12 @@ type KnorkLang struct {
 }
 
 type Value struct {
-	Value         *int64   `@(Int)`
-	Float         *float64 `|@(Float)`
-	Type          int
-	Variable      *string     `| @Ident`
-	Subexpression *Expression `| "(" @@ ")"`
+	Value  *int64   `@(Int)`
+	Float  *float64 `|@(Float)`
+	String *string  `|@(String)`
+	Type   DataType
+	// Variable      *string     `| @Ident`
+	// Subexpression *Expression `| "(" @@ ")"`
 }
 
 type Factor struct {
@@ -81,6 +84,7 @@ type OpTerm struct {
 }
 
 type Expression struct {
+	Pos   lexer.Position
 	Left  *Term     `@@`
 	Right []*OpTerm `@@*`
 	EOL   *string   `@(";")`
@@ -95,6 +99,7 @@ type Declaration struct {
 }
 
 type Assignment struct {
+	Pos        lexer.Position
 	Identifier *string             `@Ident`
 	Assignment *AssignmentOperator `@("=")`
 	Expression *Expression         `@@`
@@ -121,26 +126,19 @@ type Statement struct {
 }
 
 func DMain() {
-	ini, err := parser.ParseString("", `var far =  6.2 + 2;
-	id = id +9;
-	`)
+	ini, err := parser.ParseString("", `var a = 4.2 +9;a=2;`)
 
 	repr.Println(ini, repr.Indent("  "), repr.OmitEmpty(true))
 	if err != nil {
 		uerr, ok := err.(*participle.UnexpectedTokenError)
-		// fmt.Print(uerr)
-		if ok {
-			if uerr.Unexpected.Type == -2 {
-				fmt.Printf("Line %v:%v Used reserved keyword: %v\n",
-					uerr.Unexpected.Pos.Line,
-					uerr.Unexpected.Pos.Column,
-					uerr.Unexpected.Value)
-			} else {
-				panic(err)
-			}
-			panic(0)
+		if ok && uerr.Unexpected.Type == -2 {
+			fmt.Printf("Line %v:%v Used reserved keyword: %v\n",
+				uerr.Unexpected.Pos.Line,
+				uerr.Unexpected.Pos.Column,
+				uerr.Unexpected.Value)
+		} else {
+			panic(err)
 		}
-		panic(0)
 	}
 
 	for _, statement := range ini.Statements {
